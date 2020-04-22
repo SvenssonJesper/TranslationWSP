@@ -6,7 +6,7 @@ app.listen(port, () => console.log('Listening at port:', port));
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const MongoClient = require('mongodb').MongoClient();
+const MongoClient = require('mongodb').MongoClient;
 const url = "mongodb://localhost:27017/";
 
 
@@ -103,3 +103,27 @@ function containsLang(obj, list) {
     return -1;
 }
 
+app.put('/translate', function (req, res) {
+    
+    const kw = req.body.keyword;
+    const lang = req.body.lang;
+    const tr = req.body.translation;
+    //bad input
+    if(lang === undefined || kw === undefined || tr === undefined){
+        res.status(400).send('Please provide a keyword, a language code and a translation');
+        return;
+    }
+    MongoClient.connect(url, function(err, db) {
+        if (err) throw err;
+        let dbo = db.db('TranslationDB');
+        
+        let i = containsLang(lang, result[0].translations).toString();
+
+        dbo.collection('translation').updateOne(
+            { keyword: kw },
+            { $set: { 'translations.0' : {language: lang, translation: tr} } }
+        )
+        db.close();
+        return res.send('Updated 1 translation');
+      });
+});
