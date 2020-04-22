@@ -46,6 +46,51 @@ app.get('/translate', function (req, res) {
       });
   })
 
+app.post('/translate', function (req, res) {
+    
+    const kw = req.body.keyword;
+    const lang = req.body.lang;
+    const tr = req.body.translation;
+    //bad input
+    if(lang === undefined || kw === undefined || tr === undefined){
+        res.status(400).send('Please provide a keyword, a language code and a translation');
+        return;
+    }
+    MongoClient.connect(url, function(err, db) {
+        if (err) throw err;
+        let dbo = db.db('TranslationDB');
+        
+        let query = {keyword: kw};
+        dbo.collection('translation').find(query).toArray(function(err, result) {
+            if (err) throw err;
+            if(result.length === 0){
+                //Adds new entry of kw with following lang code + translation
+                let myobj = { keyword: kw, 
+                            translations: [
+                            {language: lang, translation: tr}
+                            ]};
+                dbo.collection('translation').insertOne(myobj, function(err, res) {
+                    if (err) throw err;
+                    
+                });
+            }else{
+                if(containsLang(lang, result[0].translations) !== -1){
+                    //lang code exsits. refer to update route
+                    db.close();
+                    return res.status(400).send('Translation for the keyword with this language code already exist. Use PUT instead.');
+                }else{
+                    //Appends new lang code + translation to DB
+                    dbo.collection('translation').updateOne(
+                        { keyword: kw },
+                        { $push: { translations: {language: lang, translation: tr} } }
+                    )
+                }  
+            }
+            db.close();
+            return res.send('Inserted 1 new translation');
+        });
+      });
+});
 
 function containsLang(obj, list) {
     var i;
