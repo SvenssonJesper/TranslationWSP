@@ -17,8 +17,7 @@ app.get('/translate', function (req, res) {
     const lang = req.body.lang;
     //bad input
     if(lang === undefined || kw === undefined){
-        res.status(400);
-        res.send('Please provide a keyword and a language code');
+        res.status(400).send('Please provide a keyword and a language code');
         return;
     }
 
@@ -33,7 +32,7 @@ app.get('/translate', function (req, res) {
                 db.close();
                 return res.status(400).send('keyword ' + kw + ' does not exist in the database');
             }else{
-                let i = containsLang(lang, result[0].translations);
+                let i = indexOfLang(lang, result[0].translations);
                 if(i !== -1){
                     db.close();
                     return res.send(result[0].translations[i].translation);
@@ -74,7 +73,7 @@ app.post('/translate', function (req, res) {
                     
                 });
             }else{
-                if(containsLang(lang, result[0].translations) !== -1){
+                if(indexOfLang(lang, result[0].translations) !== -1){
                     //lang code exsits. refer to update route
                     db.close();
                     return res.status(400).send('Translation for the keyword with this language code already exist. Use PUT instead.');
@@ -92,17 +91,6 @@ app.post('/translate', function (req, res) {
       });
 });
 
-function containsLang(obj, list) {
-    var i;
-    for (i = 0; i < list.length; i++) {
-        if (list[i].language === obj) {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
 app.put('/translate', function (req, res) {
     
     const kw = req.body.keyword;
@@ -117,13 +105,30 @@ app.put('/translate', function (req, res) {
         if (err) throw err;
         let dbo = db.db('TranslationDB');
         
-        let i = containsLang(lang, result[0].translations).toString();
+        let query = {keyword: kw};
+        dbo.collection('translation').find(query).toArray(function(err, result) {
+            if (err) throw err;
+            let index = indexOfLang(lang, result[0].translations)
+            let entry = 'translations.' + index;
+            console.log(entry)
 
-        dbo.collection('translation').updateOne(
-            { keyword: kw },
-            { $set: { 'translations.0' : {language: lang, translation: tr} } }
-        )
-        db.close();
-        return res.send('Updated 1 translation');
-      });
+            dbo.collection('translation').updateOne(
+                { keyword: kw },
+                { $set: { entry : {language: lang, translation: tr} } }
+            )
+            db.close();
+            return res.send('Updated 1 translation');
+        });
+        });
 });
+
+function indexOfLang(obj, list) {
+    var i;
+    for (i = 0; i < list.length; i++) {
+        if (list[i].language === obj) {
+            return i;
+        }
+    }
+
+    return -1;
+}
