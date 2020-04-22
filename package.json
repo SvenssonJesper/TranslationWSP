@@ -1,0 +1,28 @@
+{
+  "name": "translationwsp",
+  "version": "1.0.0",
+  "description": "API for translating key words",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SvenssonJesper/TranslationWSP.git"
+  },
+  "keywords": [
+    "translate"
+  ],
+  "author": "Jesper Svensson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SvenssonJesper/TranslationWSP/issues"
+  },
+  "homepage": "https://github.com/SvenssonJesper/TranslationWSP#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "mongodb": "^3.5.6",
+    "nodemon": "^2.0.3"
+  }
+}
